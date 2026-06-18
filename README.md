@@ -25,8 +25,6 @@ Le serveur lit `MONGODB_URI` depuis `.env` et se connecte avec Mongoose. Les col
 - `measurements`: mesures Phyphox normalisees entre 0 et 1.
 - `observations`: observations manuelles et metadonnees de session.
 
-Ne committez jamais `.env`; `.gitignore` l'exclut.
-
 ## Lancement
 
 ```bash
