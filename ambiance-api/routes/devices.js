@@ -5,7 +5,6 @@ const router = express.Router();
 const Device = require("../models/Device");
 
 // POST /devices
-// Créer un appareil et générer une clé API
 router.post("/", async (req, res) => {
   try {
     const { name, location, zone } = req.body;
@@ -27,7 +26,7 @@ router.post("/", async (req, res) => {
     });
 
     res.status(201).json({
-      message: "Device créé avec succès.",
+      message: "Device cree avec succes.",
       data: {
         id: device._id,
         name: device.name,
@@ -36,7 +35,6 @@ router.post("/", async (req, res) => {
         apiKey: device.apiKey
       }
     });
-
   } catch (error) {
     res.status(500).json({
       error: "SERVER_ERROR",
@@ -46,7 +44,6 @@ router.post("/", async (req, res) => {
 });
 
 // GET /devices
-// Voir les appareils enregistrés
 router.get("/", async (req, res) => {
   try {
     const devices = await Device.find();
@@ -55,7 +52,6 @@ router.get("/", async (req, res) => {
       count: devices.length,
       data: devices
     });
-
   } catch (error) {
     res.status(500).json({
       error: "SERVER_ERROR",

@@ -1,2 +1,10 @@
 name: Globals
-values: []
+values:
+  - key: baseUrl
+    value: http://localhost:3000
+  - key: apiKey
+    value: api_key_demo_lafontaine
+  - key: location
+    value: parc-lafontaine
+  - key: zone
+    value: zone-banc-central

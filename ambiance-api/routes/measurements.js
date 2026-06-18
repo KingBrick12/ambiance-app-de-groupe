@@ -5,7 +5,6 @@ const Measurement = require("../models/Measurement");
 const apiKeyAuth = require("../middleware/apiKeyAuth");
 
 // POST /measurements
-// Ajouter une mesure Phyphox
 router.post("/", apiKeyAuth, async (req, res) => {
   try {
     const { type, value, location, zone, timestamp } = req.body;
@@ -20,7 +19,7 @@ router.post("/", apiKeyAuth, async (req, res) => {
     if (typeof value !== "number") {
       return res.status(400).json({
         error: "VALIDATION_ERROR",
-        message: "Le champ value doit être un nombre."
+        message: "Le champ value doit etre un nombre."
       });
     }
 
@@ -33,10 +32,9 @@ router.post("/", apiKeyAuth, async (req, res) => {
     });
 
     res.status(201).json({
-      message: "Mesure créée avec succès.",
+      message: "Mesure creee avec succes.",
       data: measurement
     });
-
   } catch (error) {
     res.status(400).json({
       error: "VALIDATION_ERROR",
@@ -46,7 +44,6 @@ router.post("/", apiKeyAuth, async (req, res) => {
 });
 
 // GET /measurements
-// Consulter les mesures
 router.get("/", async (req, res) => {
   try {
     const filter = {};
@@ -73,7 +70,6 @@ router.get("/", async (req, res) => {
       count: measurements.length,
       data: measurements
     });
-
   } catch (error) {
     res.status(500).json({
       error: "SERVER_ERROR",

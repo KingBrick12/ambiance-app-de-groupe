@@ -3,23 +3,7 @@ const router = express.Router();
 
 const Measurement = require("../models/Measurement");
 const Observation = require("../models/Observation");
-
-function classifyNoise(averageNoise) {
-  if (averageNoise <= 0.25) return "calme";
-  if (averageNoise <= 0.50) return "modere";
-  if (averageNoise <= 0.75) return "anime";
-  return "bruyant";
-}
-
-function parseLast(last) {
-  if (!last) return 3 * 60 * 60 * 1000; // 3h par défaut
-
-  const value = parseInt(last);
-  if (last.endsWith("h")) return value * 60 * 60 * 1000;
-  if (last.endsWith("m")) return value * 60 * 1000;
-
-  return 3 * 60 * 60 * 1000;
-}
+const { classifyNoise, parseLast } = require("../lib/ambianceLogic");
 
 // GET /ambiance/:location/current
 router.get("/:location/current", async (req, res) => {
@@ -27,7 +11,7 @@ router.get("/:location/current", async (req, res) => {
     const { location } = req.params;
     const { zone } = req.query;
 
-    const since = new Date(Date.now() - 30 * 60 * 1000); // 30 dernières minutes
+    const since = new Date(Date.now() - 30 * 60 * 1000);
 
     const filter = {
       location,
@@ -41,7 +25,7 @@ router.get("/:location/current", async (req, res) => {
     if (measurements.length === 0) {
       return res.status(404).json({
         error: "NOT_FOUND",
-        message: "Aucune mesure récente trouvée pour ce lieu."
+        message: "Aucune mesure recente trouvee pour ce lieu."
       });
     }
 
@@ -63,7 +47,6 @@ router.get("/:location/current", async (req, res) => {
       vibe: lastObservation ? lastObservation.vibe : "inconnue",
       message: `Le lieu est actuellement ${noiseLevel}.`
     });
-
   } catch (error) {
     res.status(500).json({
       error: "SERVER_ERROR",
@@ -93,7 +76,7 @@ router.get("/:location/history", async (req, res) => {
     if (measurements.length === 0) {
       return res.status(404).json({
         error: "NOT_FOUND",
-        message: "Aucune mesure trouvée pour cette période."
+        message: "Aucune mesure trouvee pour cette periode."
       });
     }
 
@@ -133,7 +116,6 @@ router.get("/:location/history", async (req, res) => {
       last: last || "3h",
       points
     });
-
   } catch (error) {
     res.status(500).json({
       error: "SERVER_ERROR",
@@ -156,7 +138,7 @@ router.get("/:location/quiet-hours", async (req, res) => {
     if (measurements.length === 0) {
       return res.status(404).json({
         error: "NOT_FOUND",
-        message: "Aucune mesure trouvée pour ce lieu."
+        message: "Aucune mesure trouvee pour ce lieu."
       });
     }
 
@@ -182,7 +164,7 @@ router.get("/:location/quiet-hours", async (req, res) => {
         return {
           hour: `${hour}:00-${Number(hour) + 1}:00`,
           averageNoise: Number(averageNoise.toFixed(2)),
-          message: "Moment généralement calme."
+          message: "Moment generalement calme."
         };
       })
       .filter((item) => item.averageNoise <= 0.35)
@@ -193,7 +175,6 @@ router.get("/:location/quiet-hours", async (req, res) => {
       zone: zone || "toutes",
       quietHours
     });
-
   } catch (error) {
     res.status(500).json({
       error: "SERVER_ERROR",

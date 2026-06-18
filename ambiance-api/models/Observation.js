@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 
 const observationSchema = new mongoose.Schema({
+  sessionNo: {
+    type: String
+  },
   location: {
     type: String,
     required: true
@@ -9,9 +12,42 @@ const observationSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  date: {
+    type: String
+  },
+  dayOfWeek: {
+    type: String
+  },
+  startTime: {
+    type: String
+  },
+  endTime: {
+    type: String
+  },
+  duration: {
+    type: String
+  },
+  weather: {
+    type: String
+  },
+  approximateTemperature: {
+    type: Number
+  },
+  phonePosition: {
+    type: String
+  },
+  appUsed: {
+    type: String
+  },
+  collectedDataType: {
+    type: String
+  },
   timestamp: {
     type: Date,
     required: true
+  },
+  observationTimeLabel: {
+    type: String
   },
   peopleCount: {
     type: Number,
@@ -23,6 +59,12 @@ const observationSchema = new mongoose.Schema({
     required: true,
     enum: ["faible", "moyenne", "elevee"]
   },
+  mainNoiseSources: {
+    type: String
+  },
+  humanSourceProximity: {
+    type: String
+  },
   proximity: {
     type: String,
     required: true,
@@ -33,7 +75,16 @@ const observationSchema = new mongoose.Schema({
     required: true,
     enum: ["calme", "moderee", "animee", "bruyante"]
   },
+  perceivedNoiseLevel: {
+    type: String
+  },
+  specialEvent: {
+    type: String
+  },
   notes: {
+    type: String
+  },
+  technicalProblems: {
     type: String
   },
   receivedAt: {

@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 const express = require("express");
 const mongoose = require("mongoose");
 
@@ -7,26 +5,24 @@ const deviceRoutes = require("./routes/devices");
 const measurementRoutes = require("./routes/measurements");
 const observationRoutes = require("./routes/observations");
 const ambianceRoutes = require("./routes/ambiance");
+const { config, validateRuntimeConfig } = require("./config");
 
 const app = express();
 
-// Parser le JSON des requêtes
 app.use(express.json());
 
-// Route de test
 app.get("/", (req, res) => {
   res.status(200).json({
-    message: "API Ambiance fonctionne"
+    message: "API Ambiance fonctionne",
+    endpoints: ["/devices", "/measurements", "/observations", "/ambiance"]
   });
 });
 
-// Routes principales
 app.use("/devices", deviceRoutes);
 app.use("/measurements", measurementRoutes);
 app.use("/observations", observationRoutes);
 app.use("/ambiance", ambianceRoutes);
 
-// Route 404
 app.use((req, res) => {
   res.status(404).json({
     error: "NOT_FOUND",
@@ -34,18 +30,27 @@ app.use((req, res) => {
   });
 });
 
-// Connexion à MongoDB Atlas + lancement du serveur
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("Connecté à MongoDB Atlas");
+async function startServer() {
+  try {
+    validateRuntimeConfig();
 
-    const PORT = process.env.PORT || 3000;
+    await mongoose.connect(config.mongodbUri);
+    console.log("Connecte a MongoDB Atlas");
 
-    app.listen(PORT, () => {
-      console.log(`Serveur lancé sur http://localhost:${PORT}`);
+    app.listen(config.port, () => {
+      console.log(`Serveur lance sur http://localhost:${config.port}`);
     });
-  })
-  .catch((error) => {
+  } catch (error) {
     console.error("Erreur de connexion MongoDB :", error.message);
-  });
+    process.exit(1);
+  }
+}
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = {
+  app,
+  startServer
+};

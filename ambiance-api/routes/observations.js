@@ -4,29 +4,51 @@ const router = express.Router();
 const Observation = require("../models/Observation");
 const apiKeyAuth = require("../middleware/apiKeyAuth");
 
+const OBSERVATION_FIELDS = [
+  "sessionNo",
+  "location",
+  "zone",
+  "date",
+  "dayOfWeek",
+  "startTime",
+  "endTime",
+  "duration",
+  "weather",
+  "approximateTemperature",
+  "phonePosition",
+  "appUsed",
+  "collectedDataType",
+  "timestamp",
+  "observationTimeLabel",
+  "peopleCount",
+  "crowdLevel",
+  "mainNoiseSources",
+  "humanSourceProximity",
+  "proximity",
+  "vibe",
+  "perceivedNoiseLevel",
+  "specialEvent",
+  "notes",
+  "technicalProblems"
+];
+
 // POST /observations
-// Ajouter une observation manuelle
 router.post("/", apiKeyAuth, async (req, res) => {
   try {
-    const {
-      location,
-      zone,
-      timestamp,
-      peopleCount,
-      crowdLevel,
-      proximity,
-      vibe,
-      notes
-    } = req.body;
+    const payload = pickObservationFields(req.body);
+
+    if (!payload.proximity && payload.humanSourceProximity) {
+      payload.proximity = payload.humanSourceProximity;
+    }
 
     if (
-      !location ||
-      !zone ||
-      !timestamp ||
-      peopleCount === undefined ||
-      !crowdLevel ||
-      !proximity ||
-      !vibe
+      !payload.location ||
+      !payload.zone ||
+      !payload.timestamp ||
+      payload.peopleCount === undefined ||
+      !payload.crowdLevel ||
+      !payload.proximity ||
+      !payload.vibe
     ) {
       return res.status(400).json({
         error: "VALIDATION_ERROR",
@@ -34,29 +56,19 @@ router.post("/", apiKeyAuth, async (req, res) => {
       });
     }
 
-    if (typeof peopleCount !== "number") {
+    if (typeof payload.peopleCount !== "number") {
       return res.status(400).json({
         error: "VALIDATION_ERROR",
-        message: "peopleCount doit être un nombre."
+        message: "peopleCount doit etre un nombre."
       });
     }
 
-    const observation = await Observation.create({
-      location,
-      zone,
-      timestamp,
-      peopleCount,
-      crowdLevel,
-      proximity,
-      vibe,
-      notes
-    });
+    const observation = await Observation.create(payload);
 
     res.status(201).json({
-      message: "Observation créée avec succès.",
+      message: "Observation creee avec succes.",
       data: observation
     });
-
   } catch (error) {
     res.status(400).json({
       error: "VALIDATION_ERROR",
@@ -66,7 +78,6 @@ router.post("/", apiKeyAuth, async (req, res) => {
 });
 
 // GET /observations
-// Consulter les observations
 router.get("/", async (req, res) => {
   try {
     const filter = {};
@@ -74,6 +85,7 @@ router.get("/", async (req, res) => {
     if (req.query.location) filter.location = req.query.location;
     if (req.query.zone) filter.zone = req.query.zone;
     if (req.query.vibe) filter.vibe = req.query.vibe;
+    if (req.query.sessionNo) filter.sessionNo = req.query.sessionNo;
 
     if (req.query.from || req.query.to) {
       filter.timestamp = {};
@@ -93,7 +105,6 @@ router.get("/", async (req, res) => {
       count: observations.length,
       data: observations
     });
-
   } catch (error) {
     res.status(500).json({
       error: "SERVER_ERROR",
@@ -101,5 +112,14 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
+function pickObservationFields(body) {
+  return OBSERVATION_FIELDS.reduce((payload, field) => {
+    if (body[field] !== undefined) {
+      payload[field] = body[field];
+    }
+    return payload;
+  }, {});
+}
 
 module.exports = router;

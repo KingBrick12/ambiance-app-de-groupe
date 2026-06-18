@@ -1,0 +1,105 @@
+{
+  "info": {
+    "name": "Ambiance API - Phase 1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiKey", "value": "api_key_demo_lafontaine" },
+    { "key": "location", "value": "parc-lafontaine" },
+    { "key": "zone", "value": "zone-banc-central" }
+  ],
+  "item": [
+    {
+      "name": "GET /",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/"
+      }
+    },
+    {
+      "name": "POST /devices",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Telephone Phyphox\",\"location\":\"{{location}}\",\"zone\":\"{{zone}}\"}"
+        },
+        "url": "{{baseUrl}}/devices"
+      }
+    },
+    {
+      "name": "GET /devices",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/devices"
+      }
+    },
+    {
+      "name": "POST /measurements",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-api-key", "value": "{{apiKey}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"type\":\"audio_amplitude\",\"value\":0.42,\"location\":\"{{location}}\",\"zone\":\"{{zone}}\",\"timestamp\":\"{{$isoTimestamp}}\"}"
+        },
+        "url": "{{baseUrl}}/measurements"
+      }
+    },
+    {
+      "name": "GET /measurements",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/measurements?location={{location}}&zone={{zone}}&type=audio_amplitude"
+      }
+    },
+    {
+      "name": "POST /observations",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-api-key", "value": "{{apiKey}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"sessionNo\":\"1\",\"location\":\"{{location}}\",\"zone\":\"{{zone}}\",\"date\":\"2026-06-17\",\"dayOfWeek\":\"mercredi\",\"startTime\":\"12:00\",\"endTime\":\"12:20\",\"duration\":\"20min\",\"weather\":\"ensoleille\",\"approximateTemperature\":22,\"phonePosition\":\"sur un banc\",\"appUsed\":\"Phyphox\",\"collectedDataType\":\"Sound pressure level (dB)\",\"timestamp\":\"{{$isoTimestamp}}\",\"observationTimeLabel\":\"10min\",\"peopleCount\":8,\"crowdLevel\":\"faible\",\"mainNoiseSources\":\"passants, conversations\",\"humanSourceProximity\":\"moyenne\",\"proximity\":\"moyenne\",\"vibe\":\"calme\",\"perceivedNoiseLevel\":\"calme\",\"specialEvent\":\"\",\"notes\":\"Observation manuelle de test.\",\"technicalProblems\":\"\"}"
+        },
+        "url": "{{baseUrl}}/observations"
+      }
+    },
+    {
+      "name": "GET /observations",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/observations?location={{location}}&zone={{zone}}"
+      }
+    },
+    {
+      "name": "GET /ambiance/:location/current",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/ambiance/{{location}}/current?zone={{zone}}"
+      }
+    },
+    {
+      "name": "GET /ambiance/:location/history",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/ambiance/{{location}}/history?last=3h&zone={{zone}}"
+      }
+    },
+    {
+      "name": "GET /ambiance/:location/quiet-hours",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/ambiance/{{location}}/quiet-hours?zone={{zone}}"
+      }
+    }
+  ]
+}
