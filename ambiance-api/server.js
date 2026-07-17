@@ -1,15 +1,20 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 
 const deviceRoutes = require("./routes/devices");
 const measurementRoutes = require("./routes/measurements");
 const observationRoutes = require("./routes/observations");
 const ambianceRoutes = require("./routes/ambiance");
+const authRoutes = require("./routes/auth");
+const accountRoutes = require("./routes/account");
+const userObservationRoutes = require("./routes/userObservations");
 const { config, validateRuntimeConfig } = require("./config");
 
 const app = express();
 
-app.use(express.json());
+app.use(cors({ origin: config.frontendUrl }));
+app.use(express.json({ limit: "100kb" }));
 
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -22,6 +27,9 @@ app.use("/devices", deviceRoutes);
 app.use("/measurements", measurementRoutes);
 app.use("/observations", observationRoutes);
 app.use("/ambiance", ambianceRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/account", accountRoutes);
+app.use("/api/observations", userObservationRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
