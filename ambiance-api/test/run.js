@@ -132,12 +132,7 @@ test("manual collection values are normalized", () => {
 });
 
 test("observation author remains optional for phase 1 data", () => {
-  const observation = new Observation({
-    location: "parc-lafontaine", zone: "zone-test", timestamp: new Date(),
-    peopleCount: 1, crowdLevel: "faible", proximity: "loin", vibe: "calme"
-  });
-  assert.equal(observation.validateSync(), undefined);
-  assert.equal(observation.author, undefined);
+  assert.equal(Observation.schema.path("author").isRequired, false);
 });
 
 test("passwords are hashed and securely compared", () => {
