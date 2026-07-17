@@ -2,7 +2,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const locationRoutes = require("./routes/locations");
-app.use("/locations", locationRoutes);
 const deviceRoutes = require("./routes/devices");
 const measurementRoutes = require("./routes/measurements");
 const observationRoutes = require("./routes/observations");
@@ -13,7 +12,7 @@ const userObservationRoutes = require("./routes/userObservations");
 const { config, validateRuntimeConfig } = require("./config");
 
 const app = express();
-
+app.use("/locations", locationRoutes);
 app.use(cors({ origin: config.frontendUrl }));
 app.use(express.json({ limit: "100kb" }));
 
