@@ -1,4 +1,7 @@
 const assert = require("assert").strict;
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const Observation = require("../models/Observation");
 
 const { average, classifyNoise, parseLast } = require("../lib/ambianceLogic");
 const {
@@ -126,6 +129,23 @@ test("manual collection values are normalized", () => {
   assert.equal(normalizeCrowdLevel("elevee"), "elevee");
   assert.equal(normalizeProximity("near"), "proche");
   assert.equal(normalizeVibe("moderee"), "moderee");
+});
+
+test("observation author remains optional for phase 1 data", () => {
+  assert.equal(Observation.schema.path("author").isRequired, false);
+});
+
+test("passwords are hashed and securely compared", () => {
+  const hash = bcrypt.hashSync("mot-de-passe-solide", 4);
+  assert.notEqual(hash, "mot-de-passe-solide");
+  assert.equal(bcrypt.compareSync("mot-de-passe-solide", hash), true);
+  assert.equal(bcrypt.compareSync("incorrect", hash), false);
+});
+
+test("authentication tokens reject an invalid signature", () => {
+  const token = jwt.sign({ sub: "user-id" }, "test-secret", { expiresIn: "1h" });
+  assert.equal(jwt.verify(token, "test-secret").sub, "user-id");
+  assert.throws(() => jwt.verify(token, "wrong-secret"));
 });
 
 function restoreEnv(name, previousValue) {

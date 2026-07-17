@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const observationSchema = new mongoose.Schema({
+  author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: false },
   sessionNo: {
     type: String
   },

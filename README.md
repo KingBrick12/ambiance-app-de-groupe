@@ -1,183 +1,69 @@
-# Infrastructure de collecte - IFT3225 Phase 1
+# Ambiance Montréal — IFT3225, groupe 18
 
-API Express + MongoDB Atlas pour collecter des donnees d'ambiance au parc Lafontaine. Le pipeline accepte des mesures Phyphox de niveau sonore, des observations manuelles de terrain et des donnees seed de demonstration, puis expose des endpoints de consultation et d'agregation.
+Le projet fait évoluer l’infrastructure de collecte de la phase 1 vers une application de consommation et de contribution. Les mesures Phyphox, imports CSV, observations terrain, lectures publiques et clés API appareils sont conservés. La phase 2 ajoute des comptes, des observations citoyennes protégées et un espace personnel.
 
-## Installation rapide
+## Architecture
 
-```bash
+- `ambiance-api/` : Express, Mongoose/MongoDB, JWT et bcrypt (JavaScript).
+- `frontend/` : React 19 et Vite (JavaScript), couche API et contexte de session centralisés.
+- `postman/` : collection phase 1.
+- `docs/` : tickets préparés et rapport d’implémentation.
+
+## Installation et configuration
+
+Prérequis : Node.js récent et MongoDB local ou Atlas.
+
+```powershell
 cd ambiance-api
 npm install
-copy .env.example .env
+Copy-Item .env.example .env
+cd ../frontend
+npm install
+Copy-Item .env.example .env
 ```
 
-Remplir `MONGODB_URI` dans `.env`. Les autres valeurs par defaut ciblent le lieu et la zone utilises dans le projet:
+Backend : `MONGODB_URI`, `JWT_SECRET` (long et aléatoire en production), `JWT_EXPIRES_IN`, `FRONTEND_URL`, `PORT`. Frontend : `VITE_API_URL`. Ne jamais commiter les fichiers `.env`.
 
-```text
-LOCATION=parc-lafontaine
-ZONE=zone-banc-central
-```
-
-## MongoDB Atlas
-
-Le serveur lit `MONGODB_URI` depuis `.env` et se connecte avec Mongoose. Les collections creees sont:
-
-- `devices`: appareils et cles API.
-- `measurements`: mesures Phyphox normalisees entre 0 et 1.
-- `observations`: observations manuelles et metadonnees de session.
-
-## Lancement
-
-```bash
+```powershell
+# terminal 1
 cd ambiance-api
 npm start
+
+# terminal 2
+cd frontend
+npm run dev
 ```
-
-L'API repond ensuite sur `http://localhost:3000`.
-
-## Donnees de demonstration
-
-```bash
-cd ambiance-api
-npm run seed
-```
-
-Ce script cree un appareil demo avec `SEED_API_KEY`, ajoute des mesures et ajoute des observations manuelles compatibles avec la fiche de collecte.
-
-## Collecte Phyphox en direct
-
-1. Ouvrir Phyphox sur le telephone.
-2. Lancer une experience de niveau sonore.
-3. Activer l'acces a distance.
-4. Mettre l'URL Phyphox dans `PHYPHOX_URL`.
-5. Verifier `PHYPHOX_VALUE_PATH=buffer.dB.buffer`.
-6. Lancer:
-
-```bash
-npm run collect
-```
-
-Le bridge lit Phyphox, utilise la normalisation dB -> 0-1 existante, puis envoie les mesures a `POST /measurements` avec `x-api-key`.
-
-## Import CSV Phyphox
-
-Exporter depuis Phyphox un CSV contenant `Time (s)` et `Sound pressure level (dB)`, puis configurer:
-
-```text
-CSV_FILE=data/phyphox/amplitudes.csv
-```
-
-Lancer:
-
-```bash
-npm run import:csv
-```
-
-Le script affiche le nombre de lignes lues, de mesures envoyees et d'erreurs. Les exports tabules avec `Durée(s)` et `SPL(dB)` sont aussi acceptes.
-
-## Fallback manuel
-
-Pour saisir une session complete de collecte directement au terminal:
-
-```bash
-npm run manual
-```
-
-Le script demande les informations de session, puis les observations a 0, 5, 10, 15 et 20 minutes. Chaque observation est envoyee a `POST /observations` avec `x-api-key`.
-
-## Import observations manuelles
-
-Placer les fiches CSV dans:
-
-```text
-ambiance-api/data/manual/
-```
-
-Puis lancer:
-
-```bash
-npm run import:manual
-```
-
-Le script lit plusieurs sessions, mappe les colonnes de la fiche vers le modele `Observation`, envoie les observations vers l'API et affiche le total importe. Pour importer un fichier precis, definir `MANUAL_FILE=chemin/vers/fichier.csv`.
 
 ## Endpoints
 
-| Methode | Endpoint | Auth | Role |
-| --- | --- | --- | --- |
-| GET | `/` | Non | Verification de l'API |
-| POST | `/devices` | Non | Cree un appareil et retourne une cle API |
-| GET | `/devices` | Non | Liste les appareils |
-| POST | `/measurements` | Oui | Ajoute une mesure Phyphox |
-| GET | `/measurements?location=&zone=&type=&from=&to=` | Non | Consulte les mesures |
-| POST | `/observations` | Oui | Ajoute une observation manuelle |
-| GET | `/observations?location=&zone=&vibe=&sessionNo=&from=&to=` | Non | Consulte les observations |
-| GET | `/ambiance/:location/current?zone=` | Non | Ambiance courante sur 30 minutes |
-| GET | `/ambiance/:location/history?last=3h&zone=` | Non | Historique par tranches de 5 minutes |
-| GET | `/ambiance/:location/quiet-hours?zone=` | Non | Heures typiquement calmes |
+Les `GET /measurements`, `GET /observations` et routes `GET /ambiance/...` restent publics. `POST /measurements` et `POST /observations` restent les flux appareil avec `x-api-key`.
 
-Les routes d'ecriture utilisent:
+| Méthode | Route | Accès |
+| --- | --- | --- |
+| POST | `/api/auth/register` | Public |
+| POST | `/api/auth/login` | Public |
+| GET | `/api/auth/me` | Bearer JWT |
+| POST | `/api/observations` | Bearer JWT |
+| GET | `/api/account/contributions` | Bearer JWT |
+| GET | `/api/account/locations` | Bearer JWT |
+| GET/POST/DELETE | `/api/account/favorites[/:location]` | Bearer JWT |
+| GET | `/api/account/available-locations` | Bearer JWT |
 
-```http
-x-api-key: api_key_demo_lafontaine
-```
+Après inscription ou connexion, envoyer `Authorization: Bearer <token>`. L’auteur d’une observation est toujours tiré de ce jeton. L’interface permet la déconnexion, restaure une session valide et nettoie une session expirée.
 
-`POST /devices` reste public en Phase 1, comme indique dans les consignes.
+## Données et collecte phase 1
 
-## Postman
+Les commandes restent disponibles : `npm run seed`, `npm run collect`, `npm run import:csv`, `npm run manual` et `npm run import:manual`. Les observations historiques sans auteur restent publiques et compatibles. Voir [le rapport de tâche 3](docs/tache-3-implementation.md) pour les décisions et limites.
 
-Importer:
+## Vérification et build
 
-```text
-postman/ambiance-api.collection.json
-```
-
-La collection contient:
-
-- `GET /`
-- `POST /devices`
-- `GET /devices`
-- `POST /measurements`
-- `GET /measurements`
-- `POST /observations`
-- `GET /observations`
-- `GET /ambiance/:location/current`
-- `GET /ambiance/:location/history`
-- `GET /ambiance/:location/quiet-hours`
-
-## Structure
-
-```text
-ambiance-api/
-  bridge/       bridge Phyphox temps reel
-  data/         exemples CSV Phyphox et observations manuelles
-  lib/          logique pure partagee
-  middleware/   authentification x-api-key
-  models/       schemas Mongoose
-  routes/       routes Express
-  scripts/      imports CSV et fallback manuel
-  seed/         donnees de demonstration
-  test/         tests sans dependance externe
-postman/        collection Postman
-```
-
-## Verification
-
-```bash
+```powershell
 cd ambiance-api
 npm run check
 npm test
+cd ../frontend
+npm run lint
+npm run build
 ```
 
-Ordre recommande pour une demonstration:
-
-```bash
-cd ambiance-api
-npm install
-copy .env.example .env
-npm start
-npm run seed
-npm run import:csv
-npm run import:manual
-```
-
-Pour la collecte terrain reelle, configurer `PHYPHOX_URL`, puis lancer `npm run collect`.
+Le backend demeure en JavaScript et le temps réel n’a pas été ajouté : les deux bonus ont été écartés pour ne pas fragiliser les exigences obligatoires.
