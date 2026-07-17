@@ -1,7 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-
+const locationRoutes = require("./routes/locations");
+app.use("/locations", locationRoutes);
 const deviceRoutes = require("./routes/devices");
 const measurementRoutes = require("./routes/measurements");
 const observationRoutes = require("./routes/observations");
