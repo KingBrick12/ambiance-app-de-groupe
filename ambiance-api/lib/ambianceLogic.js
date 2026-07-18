@@ -1,8 +1,26 @@
+const NOISE_SCALE = [
+  { min: 0, max: 0.25, label: "calme" },
+  { min: 0.25, max: 0.50, label: "modere" },
+  { min: 0.50, max: 0.75, label: "anime" },
+  { min: 0.75, max: 1, label: "bruyant" }
+];
+
 function classifyNoise(averageNoise) {
+  if (averageNoise === null || averageNoise === undefined) {
+    return "inconnue";
+  }
+
   if (averageNoise <= 0.25) return "calme";
   if (averageNoise <= 0.50) return "modere";
   if (averageNoise <= 0.75) return "anime";
   return "bruyant";
+}
+
+function scalePayload() {
+  return {
+    unit: "amplitude normalisee",
+    thresholds: NOISE_SCALE
+  };
 }
 
 function parseLast(last) {
@@ -26,5 +44,6 @@ function average(values) {
 module.exports = {
   average,
   classifyNoise,
-  parseLast
+  parseLast,
+  scalePayload
 };
