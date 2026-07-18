@@ -19,8 +19,6 @@ const ALLOWED_FIELDS = [
   "notes"
 ];
 
-// POST /api/observations
-// Crée une observation liée à l'utilisateur connecté.
 router.post("/", userAuth, async (req, res) => {
   try {
     if (req.body.author !== undefined) {
@@ -94,8 +92,6 @@ router.post("/", userAuth, async (req, res) => {
   }
 });
 
-// GET /api/observations/mine
-// Retourne les observations de l'utilisateur connecté.
 router.get("/mine", userAuth, async (req, res) => {
   try {
     const observations = await Observation.find({
