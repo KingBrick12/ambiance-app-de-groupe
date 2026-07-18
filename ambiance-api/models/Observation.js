@@ -89,9 +89,17 @@ const observationSchema = new mongoose.Schema({
     type: String
   },
   receivedAt: {
-    type: Date,
-    default: Date.now
+      type: Date,
+      default: Date.now
+    }
+  },
+  {
+    timestamps: true
   }
-});
+);
+
+
+observationSchema.index({ author: 1, timestamp: -1 });
+observationSchema.index({ location: 1, zone: 1, timestamp: -1 });
 
 module.exports = mongoose.model("Observation", observationSchema);
