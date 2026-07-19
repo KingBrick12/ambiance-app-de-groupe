@@ -1,0 +1,21 @@
+import { useCallback, useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { getLocation } from "../api/locationApi";
+import { getAmbianceHistory, getCurrentAmbiance, getQuietHours } from "../api/ambianceApi";
+import AmbianceBadge from "../components/AmbianceBadge";
+import HistoryChart from "../components/HistoryChart";
+import QuietHours from "../components/QuietHours";
+import { ErrorState, LoadingState } from "../components/StateMessage";
+
+export default function LocationDetailsPage(){
+ const {slug}=useParams(); const [state,setState]=useState({loading:true,error:"",location:null,current:null,history:null,quiet:null});
+ const load=useCallback(()=>{setState(s=>({...s,loading:true,error:""}));Promise.all([getLocation(slug),getCurrentAmbiance(slug),getAmbianceHistory(slug,"24h"),getQuietHours(slug)]).then(([location,current,history,quiet])=>setState({loading:false,error:"",location,current:current.data,history:history.data,quiet:quiet.data})).catch(e=>setState(s=>({...s,loading:false,error:e.message})));},[slug]);
+ useEffect(()=>{load();},[load]);
+ if(state.loading)return <main className="public-page"><LoadingState message="Chargement du portrait…"/></main>;
+ if(state.error)return <main className="public-page"><ErrorState message={state.error} onRetry={load}/></main>;
+ const {location,current,history,quiet}=state;
+ return <main className="public-page"><Link className="back-link" to="/">← Retour à la carte</Link><section className="detail-hero"><div><p className="eyebrow">Portrait d’ambiance</p><h1>{location.name}</h1><p>{location.description}</p></div><AmbianceBadge classification={current.classification} status={current.status}/></section>
+ <section className="summary-grid"><article><h2>Ambiance actuelle</h2><p>{current.message}</p><strong>{current.averageNoise ?? "—"} {current.scale.unit}</strong></article><article><h2>Fraîcheur</h2><p>{current.freshness.isRecent ? "Mesure récente" : "Donnée ancienne ou absente"}</p><span>Seuil : {current.freshness.thresholdMinutes} minutes</span></article><article><h2>Dernière mesure</h2><p>{current.measuredAt ? new Date(current.measuredAt).toLocaleString("fr-CA") : "Aucune"}</p></article></section>
+ <section className="detail-section"><h2>Historique des dernières 24 heures</h2><HistoryChart points={history.points} scale={history.scale}/></section>
+ <section className="detail-section"><h2>Créneaux calmes</h2><p>Créneaux dont l’amplitude moyenne est inférieure ou égale à {quiet.threshold.maximumAverageNoise}.</p><QuietHours slots={quiet.slots} scale={quiet.scale}/></section></main>;
+}
