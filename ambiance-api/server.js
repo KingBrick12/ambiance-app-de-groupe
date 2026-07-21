@@ -9,51 +9,122 @@ const ambianceRoutes = require("./routes/ambiance");
 const authRoutes = require("./routes/auth");
 const accountRoutes = require("./routes/account");
 const userObservationRoutes = require("./routes/userObservations");
+
 const { config, validateRuntimeConfig } = require("./config");
 
 const app = express();
-app.use("/locations", locationRoutes);
-app.use(cors({ origin: config.frontendUrl }));
+
+/*
+ * Middlewares globaux
+*/
+app.use(
+  cors({
+    origin: config.frontendUrl,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-api-key"]
+  })
+);
+
 app.use(express.json({ limit: "100kb" }));
 
+/*
+ * Route principale
+ *
+ * Permet de vérifier rapidement que l’API fonctionne.
+ */
 app.get("/", (req, res) => {
   res.status(200).json({
     message: "API Ambiance fonctionne",
-    endpoints: ["/devices", "/measurements", "/observations", "/ambiance"]
+    endpoints: {
+      locations: "/locations",
+      devices: "/devices",
+      measurements: "/measurements",
+      observations: "/observations",
+      ambiance: "/ambiance",
+      authentication: "/api/auth",
+      account: "/api/account",
+      userObservations: "/api/observations"
+    }
   });
 });
 
+/*
+ * Routes publiques
+ */
+app.use("/locations", locationRoutes);
 app.use("/devices", deviceRoutes);
 app.use("/measurements", measurementRoutes);
 app.use("/observations", observationRoutes);
 app.use("/ambiance", ambianceRoutes);
+
+/*
+ * Routes d’authentification et routes privées
+ */
 app.use("/api/auth", authRoutes);
 app.use("/api/account", accountRoutes);
 app.use("/api/observations", userObservationRoutes);
 
+/*
+ * Gestion des routes inexistantes
+*/
 app.use((req, res) => {
   res.status(404).json({
     error: "NOT_FOUND",
-    message: "Endpoint introuvable"
+    message: `L’endpoint ${req.method} ${req.originalUrl} est introuvable.`
   });
 });
 
+/*
+ * Gestion globale des erreurs
+*/
+app.use((error, req, res, next) => {
+  console.error("Erreur serveur :", error);
+
+  if (res.headersSent) {
+    return next(error);
+  }
+
+  return res.status(error.status || 500).json({
+    error: error.code || "INTERNAL_SERVER_ERROR",
+    message:
+      error.message ||
+      "Une erreur inattendue est survenue sur le serveur."
+  });
+});
+
+/*
+ * Connexion à MongoDB et démarrage du serveur
+ */
 async function startServer() {
   try {
     validateRuntimeConfig();
 
     await mongoose.connect(config.mongodbUri);
-    console.log("Connecte a MongoDB Atlas");
+
+    console.log("Connecté à MongoDB Atlas");
 
     app.listen(config.port, () => {
-      console.log(`Serveur lance sur http://localhost:${config.port}`);
+      console.log(
+        `Serveur lancé sur http://localhost:${config.port}`
+      );
+
+      console.log(
+        `Frontend autorisé : ${config.frontendUrl}`
+      );
     });
   } catch (error) {
-    console.error("Erreur de connexion MongoDB :", error.message);
+    console.error(
+      "Erreur pendant le démarrage du serveur :",
+      error.message
+    );
+
     process.exit(1);
   }
 }
 
+/*
+ * Le serveur démarre seulement lorsque ce fichier est exécuté directement.
+ */
 if (require.main === module) {
   startServer();
 }

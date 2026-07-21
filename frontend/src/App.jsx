@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
+import { Link, Route, Routes } from 'react-router-dom'
+import PublicMapPage from './pages/PublicMapPage'
+import LocationDetailsPage from './pages/LocationDetailsPage'
 import { api } from './api'
 import { useAuth } from './auth-context'
 import './App.css'
 
-function App() {
+function MemberArea() {
   const auth = useAuth()
   const [view, setView] = useState('home')
   if (auth.loading) return <main className="shell"><p>Restauration de votre session…</p></main>
@@ -46,4 +49,25 @@ function Account() {
   return <main className="account"><section className="profile"><p className="eyebrow">Mon espace</p><h1>{user.displayName}</h1><p>{user.email}</p><p>Membre depuis le {new Date(user.createdAt).toLocaleDateString('fr-CA')}</p><button onClick={() => logout()}>Se déconnecter</button></section>{error && <p className="notice error">{error}</p>}{!data ? <p>Chargement de vos données…</p> : <div className="cards"><Section title="Mes contributions" empty="Vous n’avez encore partagé aucune observation.">{data.contributions.map(o => <article key={o._id}><strong>{o.location}</strong><span>{new Date(o.timestamp).toLocaleString('fr-CA')} · {o.vibe} · {o.peopleCount} personne(s)</span></article>)}</Section><Section title="Mes lieux" empty="Aucun lieu visité pour le moment.">{data.locations.map(l => <article key={l.location}><strong>{l.location}</strong><span>{l.contributionCount} contribution(s)</span></article>)}</Section><Section title="Favoris" empty="Aucun favori. Ajoutez-en ci-dessous.">{data.favorites.map(l => <article key={l}><strong>{l}</strong><button onClick={() => toggle(l)}>Retirer</button></article>)}<div className="chips">{data.available.filter(l => !data.favorites.includes(l)).map(l => <button key={l} onClick={() => toggle(l)}>＋ {l}</button>)}</div></Section></div>}</main>
 }
 function Section({ title, empty, children }) { const items = Array.isArray(children) ? children.flat().filter(Boolean) : [children]; return <section className="card"><h2>{title}</h2>{items.length ? children : <p>{empty}</p>}</section> }
+function App() {
+  return (
+    <div className="shell">
+      <header>
+        <Link className="brand" to="/">Ambiance Montréal</Link>
+        <nav>
+          <Link to="/">Carte publique</Link>
+          <Link to="/espace">Contribuer et mon compte</Link>
+        </nav>
+      </header>
+
+      <Routes>
+        <Route path="/" element={<PublicMapPage />} />
+        <Route path="/lieux/:slug" element={<LocationDetailsPage />} />
+        <Route path="/espace" element={<MemberArea />} />
+        <Route path="*" element={<main className="public-page"><h1>Page introuvable</h1><Link to="/">Retour à la carte</Link></main>} />
+      </Routes>
+    </div>
+  )
+}
+
 export default App
