@@ -53,8 +53,6 @@ async function seed() {
   validateRuntimeConfig();
   await mongoose.connect(config.mongodbUri);
 
-    LOCATIONS.map((location) => ({
-        filter: { slug: location.slug },
   try {
     await Location.bulkWrite(
       LOCATIONS.map((location) => ({
