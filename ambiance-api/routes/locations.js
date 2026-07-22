@@ -2,7 +2,7 @@ const express = require("express");
 const Location = require("../models/Location");
 const Measurement = require("../models/Measurement");
 const Observation = require("../models/Observation");
-const { average, classifyNoise, scalePayload } = require("../lib/ambianceLogic");
+const { average, classificationFromVibe, classifyNoise, scalePayload } = require("../lib/ambianceLogic");
 
 const router = express.Router();
 const FRESHNESS_THRESHOLD_MINUTES = 30;
@@ -22,29 +22,29 @@ router.get("/", async (req, res) => {
 
     const data = await Promise.all(
       locations.map(async (location) => {
-        const latestMeasurement = await Measurement.findOne({ location: location.slug })
-          .sort({ timestamp: -1 })
-          .lean();
+        const [latestMeasurement, recentMeasurements, lastObservation, sessionIds] = await Promise.all([
+          Measurement.findOne({ location: location.slug }).sort({ timestamp: -1 }).lean(),
+          Measurement.find({ location: location.slug, timestamp: { $gte: recentSince } }).lean(),
+          Observation.findOne({ location: location.slug }).sort({ timestamp: -1 }).lean(),
+          Measurement.distinct("sessionId", { location: location.slug, sessionId: { $exists: true } })
+        ]);
 
-        const recentMeasurements = await Measurement.find({
-          location: location.slug,
-          timestamp: { $gte: recentSince }
-        }).lean();
-
-        const lastObservation = await Observation.findOne({ location: location.slug })
-          .sort({ timestamp: -1 })
-          .lean();
-
-        const measuredAt = latestMeasurement?.timestamp || null;
-        const ageMinutes = measuredAt
-          ? Math.max(0, Math.floor((now - new Date(measuredAt).getTime()) / 60000))
+        const measurementTime = latestMeasurement ? new Date(latestMeasurement.timestamp).getTime() : 0;
+        const observationTime = lastObservation ? new Date(lastObservation.timestamp).getTime() : 0;
+        const observationIsLatest = observationTime >= measurementTime;
+        const measuredAt = new Date(Math.max(measurementTime, observationTime) || 0);
+        const latestAt = measuredAt.getTime() ? measuredAt : null;
+        const ageMinutes = latestAt
+          ? Math.max(0, Math.floor((now - measuredAt.getTime()) / 60000))
           : null;
-        const isRecent = recentMeasurements.length > 0;
-        const status = isRecent ? "recent" : latestMeasurement ? "stale" : "empty";
+        const isRecent = Boolean(latestAt && latestAt >= recentSince);
+        const status = isRecent ? "recent" : latestAt ? "stale" : "empty";
         const averageNoise = isRecent
           ? average(recentMeasurements.map((measurement) => measurement.value))
           : null;
-        const classification = classifyNoise(averageNoise);
+        const classification = isRecent && observationIsLatest
+          ? classificationFromVibe(lastObservation?.vibe)
+          : classifyNoise(averageNoise);
 
         let message = "Aucune mesure n'est disponible pour ce lieu.";
         if (status === "stale") {
@@ -58,6 +58,7 @@ router.get("/", async (req, res) => {
           name: location.name,
           description: location.description || "Aucune description disponible.",
           defaultZone: location.defaultZone || null,
+          sessionCount: sessionIds.length,
           coordinates: {
             latitude: location.latitude,
             longitude: location.longitude
@@ -67,7 +68,8 @@ router.get("/", async (req, res) => {
             classification,
             averageNoise: averageNoise === null ? null : Number(averageNoise.toFixed(2)),
             vibe: lastObservation?.vibe || "inconnue",
-            measuredAt,
+            measuredAt: latestAt,
+            source: observationIsLatest ? "observation" : "measurement",
             freshness: {
               isRecent,
               thresholdMinutes: FRESHNESS_THRESHOLD_MINUTES,
@@ -107,12 +109,17 @@ router.get("/:slug", async (req, res) => {
       });
     }
 
+    const sessionIds = await Measurement.distinct("sessionId", {
+      location: location.slug,
+      sessionId: { $exists: true }
+    });
     return res.status(200).json({
       data: {
         slug: location.slug,
         name: location.name,
         description: location.description || "Aucune description disponible.",
         defaultZone: location.defaultZone || null,
+        sessionCount: sessionIds.length,
         coordinates: {
           latitude: location.latitude,
           longitude: location.longitude

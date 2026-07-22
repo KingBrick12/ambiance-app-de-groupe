@@ -1,6 +1,6 @@
 # Ambiance API
 
-API Express permettant de collecter et consulter l'ambiance du parc Lafontaine.
+API Express permettant de collecter et consulter l'ambiance d'un lieu
 
 ## Prérequis
 

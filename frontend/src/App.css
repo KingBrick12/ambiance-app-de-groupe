@@ -40,6 +40,9 @@ a { color: #236b4b; font-weight: 700; }
 header .brand { text-decoration: none; }
 header nav a { text-decoration: none; padding: .55rem .8rem; border-radius: 999px; }
 header nav a:hover { background: #e4ece6; }
+.header-action { border: 1px solid #236b4b; background: #236b4b; color: #fff; }
+header nav .header-action:hover { background: #19553b; }
+.header-logout { padding: .55rem .8rem; background: transparent; }
 .public-page { width: min(1200px, calc(100% - 2rem)); margin: 2rem auto 4rem; }
 .page-intro { margin-bottom: 1.5rem; }
 .page-intro h1, .detail-hero h1 { margin: .35rem 0 1rem; font: clamp(2.2rem, 5vw, 4.6rem)/1 Georgia, serif; letter-spacing: -.04em; }
@@ -72,6 +75,8 @@ header nav a:hover { background: #e4ece6; }
 .summary-grid h2, .detail-section h2 { margin-top: 0; font-family: Georgia, serif; }
 .summary-grid span { color: #66766d; }
 .detail-section { margin-top: 1.5rem; }
+.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.section-heading label { min-width: 220px; }
 .chart-wrap { width: 100%; min-height: 320px; }
 .scale-note { color: #66766d; font-size: .9rem; }
 .quiet-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; }
@@ -85,4 +90,6 @@ header nav a:hover { background: #e4ece6; }
   .detail-hero, .location-list article { align-items: flex-start; flex-direction: column; }
   .location-actions { justify-items: start; min-width: 0; }
   .summary-grid { grid-template-columns: 1fr; }
+  .section-heading { align-items: stretch; flex-direction: column; }
 }
+.member-area { min-width: 0; }

@@ -2,6 +2,8 @@ const assert = require("assert").strict;
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Observation = require("../models/Observation");
+const { loadCollectionData } = require("../lib/collectionCsv");
+const { normalizeLocation } = require("../lib/locations");
 
 const { average, classifyNoise, parseLast } = require("../lib/ambianceLogic");
 const {
@@ -25,10 +27,10 @@ function test(name, fn) {
 }
 
 test("classifyNoise classifies thresholds", () => {
-  assert.equal(classifyNoise(0.20), "calme");
-  assert.equal(classifyNoise(0.50), "modere");
-  assert.equal(classifyNoise(0.70), "anime");
-  assert.equal(classifyNoise(0.90), "bruyant");
+  assert.equal(classifyNoise(0.20).code, "calme");
+  assert.equal(classifyNoise(0.50).code, "anime");
+  assert.equal(classifyNoise(0.70).code, "anime");
+  assert.equal(classifyNoise(0.90).code, "bruyant");
 });
 
 test("parseLast accepts minutes and hours", () => {
@@ -36,6 +38,23 @@ test("parseLast accepts minutes and hours", () => {
   assert.equal(parseLast("2h"), 2 * 60 * 60 * 1000);
   assert.equal(parseLast(), 3 * 60 * 60 * 1000);
   assert.equal(parseLast("abc"), 3 * 60 * 60 * 1000);
+  assert.equal(parseLast("all"), null);
+});
+
+test("collection CSV import exposes exactly 12 sessions", () => {
+  const imported = loadCollectionData();
+  assert.equal(imported.sessions.length, 12);
+  assert.equal(imported.sessions.filter(({ session }) => session.location === "parc-lafontaine").length, 6);
+  assert.equal(imported.sessions.filter(({ session }) => session.location === "parc-jean-mance").length, 3);
+  assert.equal(imported.sessions.filter(({ session }) => session.location === "parc-maisonneuve").length, 3);
+  assert.ok(imported.measurements.length > 140000);
+  assert.equal(new Set(imported.measurements.map(({ importKey }) => importKey)).size, imported.measurements.length);
+});
+
+test("location aliases are normalized to the three canonical slugs", () => {
+  assert.equal(normalizeLocation("parc-jeanne-mance"), "parc-jean-mance");
+  assert.equal(normalizeLocation("parc_lafontaine"), "parc-lafontaine");
+  assert.equal(normalizeLocation("Parc Maisonneuve"), "parc-maisonneuve");
 });
 
 test("average handles empty and numeric arrays", () => {

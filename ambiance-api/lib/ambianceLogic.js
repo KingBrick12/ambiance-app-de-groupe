@@ -41,6 +41,11 @@ function classifyNoise(averageNoise) {
   );
 }
 
+function classificationFromVibe(vibe) {
+  const code = ({ calme: "calme", moderee: "modere", animee: "anime", bruyante: "bruyant" })[vibe];
+  return NOISE_SCALE.find((level) => level.code === code) || null;
+}
+
 function scalePayload() {
   return {
     label: "Amplitude sonore moyenne",
@@ -52,6 +57,7 @@ function scalePayload() {
 }
 
 function parseLast(last) {
+  if (last === "all") return null;
   if (!last) return 3 * 60 * 60 * 1000;
   const match = String(last).trim().match(/^(\d+)(m|h|d)$/);
   if (!match) return 3 * 60 * 60 * 1000;
@@ -73,6 +79,7 @@ function average(values) {
 
 module.exports = {
   average,
+  classificationFromVibe,
   classifyNoise,
   parseLast,
   scalePayload

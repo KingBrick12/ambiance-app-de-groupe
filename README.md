@@ -1,15 +1,8 @@
 # Ambiance Montréal — IFT3225, groupe 18
 
-Le projet fait évoluer l’infrastructure de collecte de la phase 1 vers une application de consommation et de contribution. Les mesures Phyphox, imports CSV, observations terrain, lectures publiques et clés API appareils sont conservés. La phase 2 ajoute des comptes, des observations citoyennes protégées et un espace personnel.
+Application Express/MongoDB et React/Vite pour consulter l'ambiance de trois parcs, importer les collectes Phyphox et contribuer avec un compte utilisateur.
 
-## Architecture
-
-- `ambiance-api/` : Express, Mongoose/MongoDB, JWT et bcrypt (JavaScript).
-- `frontend/` : React 19 et Vite (JavaScript), couche API et contexte de session centralisés.
-- `postman/` : collection phase 1.
-- `docs/` : tickets préparés et rapport d’implémentation.
-
-## Installation et configuration
+## Installation
 
 Prérequis : Node.js récent et MongoDB local ou Atlas.
 
@@ -22,7 +15,30 @@ npm install
 Copy-Item .env.example .env
 ```
 
-Backend : `MONGODB_URI`, `JWT_SECRET` (long et aléatoire en production), `JWT_EXPIRES_IN`, `FRONTEND_URL`, `PORT`. Frontend : `VITE_API_URL`. Ne jamais commiter les fichiers `.env`.
+Backend : configurez `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `FRONTEND_URL`, `PORT` et `SEED_API_KEY`. Frontend : `VITE_API_URL=http://localhost:3000`. Les `.env` sont ignorés par Git.
+
+## Import des collectes
+
+Les fichiers sources sont dans `ambiance-api/data/collections/`. Le manifeste dans `ambiance-api/lib/collectionCsv.js` relie chaque fichier à un parc, une session, une zone et une date de départ. Les CSV virgule et tabulation sont acceptés, ainsi que les nombres décimaux avec point ou virgule. Les cellules vides sont signalées puis ignorées.
+
+La collecte comprend exactement :
+
+- 6 sessions au Parc Lafontaine (3 de phase 1 et 3 de phase 2);
+- 3 sessions au Parc Jean-Mance;
+- 3 sessions au Parc Maisonneuve.
+
+Pour importer ou réimporter :
+
+```powershell
+cd ambiance-api
+npm run seed
+```
+
+Le seed est relançable : il met à jour les lieux, fusionne les anciennes variantes de noms, déduplique les favoris, puis réinsère les 12 sessions. Il génère aussi cinq mesures aléatoires âgées de moins de 30 minutes pour chacun des trois parcs afin d'alimenter l'ambiance actuelle. Les contributions des utilisateurs ne sont pas supprimées. Pour garder les CSV ailleurs, définissez `COLLECTION_CSV_DIR`.
+
+Chaque mesure conserve une amplitude normalisée interne, un `sessionId`, un `sampleIndex`, une date et une clé d'import stable. Une observation récapitulative catégorielle (`calme`, `modérée`, `animée` ou `bruyante`) est créée par session; les décibels bruts ne sont pas présentés dans l'interface.
+
+## Lancement
 
 ```powershell
 # terminal 1
@@ -34,36 +50,42 @@ cd frontend
 npm run dev
 ```
 
-## Endpoints
+Ouvrez `http://localhost:5173`; l'API répond sur `http://localhost:3000`.
 
-Les `GET /measurements`, `GET /observations` et routes `GET /ambiance/...` restent publics. `POST /measurements` et `POST /observations` restent les flux appareil avec `x-api-key`.
+## Soumettre une observation
 
-| Méthode | Route | Accès |
-| --- | --- | --- |
-| POST | `/api/auth/register` | Public |
-| POST | `/api/auth/login` | Public |
-| GET | `/api/auth/me` | Bearer JWT |
-| POST | `/api/observations` | Bearer JWT |
-| GET | `/api/account/contributions` | Bearer JWT |
-| GET | `/api/account/locations` | Bearer JWT |
-| GET/POST/DELETE | `/api/account/favorites[/:location]` | Bearer JWT |
-| GET | `/api/account/available-locations` | Bearer JWT |
+1. Ouvrez **Contribuer et mon compte**.
+2. Créez un compte ou connectez-vous.
+3. Cliquez sur **Observer**, choisissez un lieu et remplissez les champs obligatoires.
+4. Choisissez une date présente ou passée; le client et l'API refusent les dates futures.
+5. Soumettez. Un message confirme la création et le formulaire est remis à zéro. Cette observation met immédiatement à jour l'ambiance publique si elle est la donnée la plus récente.
+6. Ouvrez **Mon compte** pour retrouver la contribution.
 
-Après inscription ou connexion, envoyer `Authorization: Bearer <token>`. L’auteur d’une observation est toujours tiré de ce jeton. L’interface permet la déconnexion, restaure une session valide et nettoie une session expirée.
+Sur le portrait d'un parc, le filtre de période permet de consulter les dernières 24 heures, 7 jours, 30 jours ou toutes les données antérieures.
 
-## Données et collecte phase 1
+Les routes historiques `POST /measurements` et `POST /observations` utilisent `x-api-key`. La contribution citoyenne utilise `POST /api/observations` avec un jeton Bearer.
 
-Les commandes restent disponibles : `npm run seed`, `npm run collect`, `npm run import:csv`, `npm run manual` et `npm run import:manual`. Les observations historiques sans auteur restent publiques et compatibles. Voir [le rapport de tâche 3](docs/tache-3-implementation.md) pour les décisions et limites.
-
-## Vérification et build
+## Vérification
 
 ```powershell
 cd ambiance-api
 npm run check
 npm test
+npm run test:integration
+
 cd ../frontend
 npm run lint
 npm run build
 ```
 
-Le backend demeure en JavaScript et le temps réel n’a pas été ajouté : les deux bonus ont été écartés pour ne pas fragiliser les exigences obligatoires.
+Le test d'intégration utilise la base configurée, crée puis supprime un compte et une observation temporaires. Il vérifie aussi les trois lieux, la répartition 6/3/3 et l'historique public.
+
+## Principales routes
+
+- `GET /locations` et `GET /locations/:slug`
+- `GET /ambiance/:location/current`
+- `GET /ambiance/:location/history?last=24h` ou `last=all`
+- `GET /ambiance/:location/quiet-hours`
+- `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`
+- `POST /api/observations`, `GET /api/observations/mine`
+- routes protégées de l'espace personnel sous `/api/account`

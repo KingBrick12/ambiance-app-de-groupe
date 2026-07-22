@@ -26,7 +26,10 @@ const measurementSchema = new mongoose.Schema({
   receivedAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  sessionId: { type: String, index: true },
+  sampleIndex: { type: Number },
+  importKey: { type: String, unique: true, sparse: true, index: true }
 });
 
 module.exports = mongoose.model("Measurement", measurementSchema);

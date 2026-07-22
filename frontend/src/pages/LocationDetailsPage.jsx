@@ -13,6 +13,7 @@ import { ErrorState, LoadingState } from "../components/StateMessage";
 
 export default function LocationDetailsPage() {
   const { slug } = useParams();
+  const [period, setPeriod] = useState("all");
   const [state, setState] = useState({
     loading: true,
     error: "",
@@ -27,7 +28,7 @@ export default function LocationDetailsPage() {
     Promise.all([
       getLocation(slug),
       getCurrentAmbiance(slug),
-      getAmbianceHistory(slug, "24h"),
+      getAmbianceHistory(slug, period),
       getQuietHours(slug)
     ])
       .then(([location, current, history, quiet]) => {
@@ -43,11 +44,14 @@ export default function LocationDetailsPage() {
       .catch((error) => {
         setState((current) => ({ ...current, loading: false, error: error.message }));
       });
-  }, [slug]);
+  }, [slug, period]);
 
   useEffect(() => {
     load();
-  }, [load]);
+    const refresh = (event) => { if (!event.detail?.location || event.detail.location === slug) load(); };
+    window.addEventListener("ambiance-updated", refresh);
+    return () => window.removeEventListener("ambiance-updated", refresh);
+  }, [load, slug]);
 
   if (state.loading) {
     return <main className="public-page"><LoadingState message="Chargement du portrait…" /></main>;
@@ -68,6 +72,7 @@ export default function LocationDetailsPage() {
           <p className="eyebrow">Portrait d'ambiance</p>
           <h1>{location.name}</h1>
           <p>{location.description}</p>
+          <p>{location.sessionCount} session(s) collectée(s)</p>
         </div>
         <AmbianceBadge classification={current.classification} status={current.status} />
       </section>
@@ -98,7 +103,17 @@ export default function LocationDetailsPage() {
       </section>
 
       <section className="detail-section">
-        <h2>Historique des dernières 24 heures</h2>
+        <div className="section-heading">
+          <h2>Historique des sessions collectées</h2>
+          <label>Période
+            <select value={period} onChange={(event) => setPeriod(event.target.value)}>
+              <option value="24h">Dernières 24 heures</option>
+              <option value="7d">7 derniers jours</option>
+              <option value="30d">30 derniers jours</option>
+              <option value="all">Toutes les données antérieures</option>
+            </select>
+          </label>
+        </div>
         <HistoryChart points={history.points} scale={history.scale} />
       </section>
 

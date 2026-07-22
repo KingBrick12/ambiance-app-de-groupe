@@ -3,6 +3,7 @@ const Measurement = require("../models/Measurement");
 const Observation = require("../models/Observation");
 const {
   average,
+  classificationFromVibe,
   classifyNoise,
   parseLast,
   scalePayload
@@ -28,16 +29,22 @@ router.get("/:location/current", async (req, res) => {
       Observation.findOne(baseFilter).sort({ timestamp: -1 }).lean()
     ]);
 
-    const measuredAt = latestMeasurement?.timestamp || null;
-    const ageMinutes = measuredAt
-      ? Math.max(0, Math.floor((now - new Date(measuredAt).getTime()) / 60000))
+    const measurementTime = latestMeasurement ? new Date(latestMeasurement.timestamp).getTime() : 0;
+    const observationTime = lastObservation ? new Date(lastObservation.timestamp).getTime() : 0;
+    const observationIsLatest = observationTime >= measurementTime;
+    const measuredAt = new Date(Math.max(measurementTime, observationTime) || 0);
+    const latestAt = measuredAt.getTime() ? measuredAt : null;
+    const ageMinutes = latestAt
+      ? Math.max(0, Math.floor((now - measuredAt.getTime()) / 60000))
       : null;
-    const isRecent = recentMeasurements.length > 0;
-    const status = isRecent ? "recent" : latestMeasurement ? "stale" : "empty";
+    const isRecent = Boolean(latestAt && ageMinutes <= FRESHNESS_THRESHOLD_MINUTES);
+    const status = isRecent ? "recent" : latestAt ? "stale" : "empty";
     const averageNoise = isRecent
       ? average(recentMeasurements.map((measurement) => measurement.value))
       : null;
-    const classification = classifyNoise(averageNoise);
+    const classification = isRecent && observationIsLatest
+      ? classificationFromVibe(lastObservation?.vibe)
+      : classifyNoise(averageNoise);
 
     let message = "Aucune mesure n'est disponible pour ce lieu.";
     if (status === "stale") {
@@ -54,7 +61,8 @@ router.get("/:location/current", async (req, res) => {
         classification,
         averageNoise: averageNoise === null ? null : Number(averageNoise.toFixed(2)),
         vibe: lastObservation?.vibe || "inconnue",
-        measuredAt,
+        measuredAt: latestAt,
+        source: observationIsLatest ? "observation" : "measurement",
         freshness: {
           isRecent,
           thresholdMinutes: FRESHNESS_THRESHOLD_MINUTES,
@@ -78,8 +86,8 @@ router.get("/:location/history", async (req, res) => {
     const { location } = req.params;
     const { zone, last } = req.query;
     const duration = parseLast(last);
-    const since = new Date(Date.now() - duration);
-    const filter = { location, timestamp: { $gte: since } };
+    const filter = { location };
+    if (duration !== null) filter.timestamp = { $gte: new Date(Date.now() - duration) };
     if (zone) filter.zone = zone;
 
     const measurements = await Measurement.find(filter).sort({ timestamp: 1 }).lean();

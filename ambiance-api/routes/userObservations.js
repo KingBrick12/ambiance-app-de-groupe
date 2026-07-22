@@ -1,7 +1,7 @@
 const express = require("express");
 const Observation = require("../models/Observation");
 const userAuth = require("../middleware/userAuth");
-const { locationExists } = require("../lib/locations");
+const { locationExists, normalizeLocation } = require("../lib/locations");
 
 const router = express.Router();
 
@@ -65,6 +65,14 @@ router.post("/", userAuth, async (req, res) => {
       });
     }
 
+    if (timestamp.getTime() > Date.now()) {
+      return res.status(400).json({
+        error: "FUTURE_TIMESTAMP",
+        message: "La date et l’heure de l’observation ne peuvent pas être dans le futur."
+      });
+    }
+
+    data.location = normalizeLocation(data.location);
     const exists = await locationExists(data.location);
 
     if (!exists) {

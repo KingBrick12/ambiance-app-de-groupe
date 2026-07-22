@@ -50,6 +50,8 @@ export default function PublicMapPage() {
 
   useEffect(() => {
     load();
+    window.addEventListener("ambiance-updated", load);
+    return () => window.removeEventListener("ambiance-updated", load);
   }, [load]);
 
   const freshnessThreshold =
@@ -92,6 +94,7 @@ export default function PublicMapPage() {
                       location.description ||
                       "Aucune description disponible."
                     }</p>
+                    <p>{location.sessionCount} session(s) collectée(s)</p>
                     <p className="location-status">
                       {current?.message ||
                         "Aucune information d'ambiance disponible."}
