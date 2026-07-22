@@ -1,3 +1,0 @@
-sessionNo,date,dayOfWeek,startTime,endTime,duration,weather,approximateTemperature,phonePosition,appUsed,collectedDataType,observationTimeLabel,peopleCount,crowdLevel,mainNoiseSources,humanSourceProximity,vibe,perceivedNoiseLevel,specialEvent,notes,technicalProblems
-1,2026-06-17,mercredi,12:00,12:20,20min,ensoleille,22,sur un banc,Phyphox,Sound pressure level (dB),0min,8,faible,passants,moyenne,calme,calme,,Observation de demonstration,
-1,2026-06-17,mercredi,12:00,12:20,20min,ensoleille,22,sur un banc,Phyphox,Sound pressure level (dB),10min,12,moyenne,conversations,moyenne,moderee,modere,,Observation de demonstration,
