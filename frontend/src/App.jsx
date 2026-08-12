@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Route, Routes, useSearchParams } from 'react-router-dom'
 import PublicMapPage from './pages/PublicMapPage'
 import LocationDetailsPage from './pages/LocationDetailsPage'
+import CompareLocationsPage from './pages/CompareLocationsPage'
 import { api } from './api'
 import { useAuth } from './auth-context'
 import './App.css'
@@ -63,6 +64,7 @@ function GlobalHeader() {
     <Link className="brand" to="/">Ambiance Montréal</Link>
     <nav aria-label="Navigation principale">
       <Link to="/">Carte publique</Link>
+      <Link to="/comparer">Comparer les lieux</Link>
       {user ? <>
         <Link className="header-action" to="/espace?view=observe">Contribuer</Link>
         <Link to="/espace?view=account">Mon compte</Link>
@@ -79,6 +81,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<PublicMapPage />} />
+        <Route path="/comparer" element={<CompareLocationsPage />} />
         <Route path="/lieux/:slug" element={<LocationDetailsPage />} />
         <Route path="/espace" element={<MemberArea />} />
         <Route path="*" element={<main className="public-page"><h1>Page introuvable</h1><Link to="/">Retour à la carte</Link></main>} />

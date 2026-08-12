@@ -93,3 +93,75 @@ header nav .header-action:hover { background: #19553b; }
   .section-heading { align-items: stretch; flex-direction: column; }
 }
 .member-area { min-width: 0; }
+
+/* ===== Phase 3 · Tâche 1 : comparateur d'ambiance ===== */
+.compare-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid #d9dfd8;
+  border-radius: 18px;
+}
+.compare-versus {
+  align-self: center;
+  padding-top: 1.4rem;
+  color: #527060;
+  font-weight: 800;
+}
+.compare-submit { min-width: 120px; }
+.comparison-recommendation {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: #e7f2e9;
+  border: 1px solid #bfd8c3;
+  border-radius: 18px;
+}
+.comparison-recommendation h2 {
+  margin: .3rem 0 .5rem;
+  font-family: Georgia, serif;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+}
+.comparison-recommendation p:last-child { margin-bottom: 0; color: #527060; }
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.comparison-card {
+  padding: 1.4rem;
+  background: #fff;
+  border: 1px solid #d9dfd8;
+  border-radius: 18px;
+}
+.comparison-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e9e5;
+}
+.comparison-card-header h2 {
+  margin: .25rem 0 0;
+  font-family: Georgia, serif;
+}
+.comparison-data { margin: 0; }
+.comparison-data > div {
+  padding: 1rem 0;
+  border-bottom: 1px solid #e5e9e5;
+}
+.comparison-data > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.comparison-data dt { color: #66766d; font-size: .9rem; }
+.comparison-data dd { margin: .2rem 0 0; font-weight: 800; }
+.comparison-data small { display: block; margin-top: .25rem; color: #66766d; }
+
+@media (max-width: 760px) {
+  .compare-form { grid-template-columns: 1fr; }
+  .compare-versus { display: none; }
+  .compare-submit { width: 100%; }
+  .comparison-grid { grid-template-columns: 1fr; }
+}
