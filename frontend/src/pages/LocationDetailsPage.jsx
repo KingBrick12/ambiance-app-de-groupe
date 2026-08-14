@@ -161,8 +161,7 @@ export default function LocationDetailsPage() {
           </label>
         </div>
 
-        <HistoryChart
-          history={history}
+        <<HistoryChart points={history?.points} scale={history?.scale} />
         />
       </section>
 
@@ -180,7 +179,7 @@ export default function LocationDetailsPage() {
           </p>
         </div>
 
-        <QuietHours quiet={quiet} />
+        <QuietHours slots={quiet?.slots} scale={quiet?.scale} />
       </section>
     </main>
   );
