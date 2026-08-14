@@ -30,6 +30,10 @@ const NOISE_SCALE = [
 ];
 
 function classifyNoise(averageNoise) {
+  if (averageNoise === null || averageNoise === undefined || averageNoise === "") {
+    return null;
+  }
+
   const value = Number(averageNoise);
   if (!Number.isFinite(value)) return null;
 
@@ -71,7 +75,10 @@ function parseLast(last) {
 
 function average(values) {
   const validValues = Array.isArray(values)
-    ? values.map(Number).filter(Number.isFinite)
+    ? values
+        .filter((value) => value !== null && value !== undefined && value !== "")
+        .map(Number)
+        .filter(Number.isFinite)
     : [];
   if (validValues.length === 0) return null;
   return validValues.reduce((total, value) => total + value, 0) / validValues.length;
