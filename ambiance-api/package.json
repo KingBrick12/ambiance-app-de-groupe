@@ -11,9 +11,10 @@
     "manual": "node scripts/manualCollect.js",
     "import:manual": "node scripts/importManualObservations.js",
     "seed": "node seed/seed.js",
+    "refresh:recent": "node scripts/refreshRecentMeasurements.js",
     "test": "vitest run",
     "test:integration": "node test/integration.js",
-    "check": "node --check server.js && node --check seed/seed.js && node --check routes/auth.js && node --check routes/account.js && node --check routes/userObservations.js && node --check routes/ambiance.js && node --check routes/locations.js && node --check routes/devices.js && node --check routes/measurements.js && node --check routes/observations.js && node --check models/User.js && node --check models/Measurement.js && node --check middleware/userAuth.js && node --check middleware/responseCache.js && node --check lib/memoryCache.js && node --check lib/locations.js && node --check lib/collectionCsv.js"
+    "check": "node --check server.js && node --check seed/seed.js && node --check scripts/refreshRecentMeasurements.js && node --check routes/auth.js && node --check routes/account.js && node --check routes/userObservations.js && node --check routes/ambiance.js && node --check routes/locations.js && node --check routes/devices.js && node --check routes/measurements.js && node --check routes/observations.js && node --check models/User.js && node --check models/Measurement.js && node --check middleware/userAuth.js && node --check middleware/responseCache.js && node --check lib/memoryCache.js && node --check lib/locations.js && node --check lib/collectionCsv.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

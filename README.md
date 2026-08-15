@@ -49,6 +49,15 @@ npm run seed
 
 Le seed est relançable : il met à jour les lieux, fusionne les anciennes variantes de noms, déduplique les favoris, puis réinsère les 12 sessions. Il génère aussi cinq mesures aléatoires âgées de moins de 30 minutes pour chacun des trois parcs afin d'alimenter l'ambiance actuelle. Les contributions des utilisateurs ne sont pas supprimées. Pour garder les CSV ailleurs, définissez `COLLECTION_CSV_DIR`.
 
+Pour actualiser uniquement les 15 mesures synthétiques récentes sans réimporter les CSV ni modifier les contributions :
+
+```powershell
+cd ambiance-api
+npm run refresh:recent
+```
+
+Cette actualisation n'est pas planifiée sur Render afin d'éviter un service Cron payant. Lancez la commande manuellement depuis un ordinateur autorisé par MongoDB Atlas, idéalement moins de 30 minutes avant une démonstration. Le fichier local `ambiance-api/.env` doit contenir le même `MONGODB_URI` que le backend déployé. Chaque exécution remplace les 15 mesures synthétiques identifiées par leurs clés stables; elle ne crée donc pas une accumulation de doublons.
+
 Chaque mesure conserve une amplitude normalisée interne, un `sessionId`, un `sampleIndex`, une date et une clé d'import stable. Une observation récapitulative catégorielle (`calme`, `modérée`, `animée` ou `bruyante`) est créée par session; les décibels bruts ne sont pas présentés dans l'interface.
 
 ## Lancement

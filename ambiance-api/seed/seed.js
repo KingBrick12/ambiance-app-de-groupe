@@ -17,14 +17,14 @@ const LOCATIONS = [
   { slug: "parc-maisonneuve", name: "Parc Maisonneuve", description: "Trois sessions de collecte Phyphox de la phase 2.", defaultZone: "zone-principale", latitude: 45.5599, longitude: -73.5578 }
 ];
 
-function recentMeasurements() {
+function recentMeasurements({ now = Date.now(), random = Math.random } = {}) {
   const profiles = { "parc-lafontaine": 0.32, "parc-jean-mance": 0.48, "parc-maisonneuve": 0.62 };
   return LOCATIONS.flatMap((location) => Array.from({ length: 5 }, (_, index) => ({
     type: "audio_amplitude",
-    value: Math.max(0, Math.min(1, profiles[location.slug] + (Math.random() - 0.5) * 0.16)),
+    value: Math.max(0, Math.min(1, profiles[location.slug] + (random() - 0.5) * 0.16)),
     location: location.slug,
     zone: location.defaultZone,
-    timestamp: new Date(Date.now() - (index * 5 + 2) * 60 * 1000),
+    timestamp: new Date(now - index * 5 * 60 * 1000),
     sampleIndex: index,
     importKey: `seed-recent:${location.slug}:${index}`
   })));
@@ -78,4 +78,4 @@ async function seed() {
 }
 
 if (require.main === module) seed().catch((error) => { console.error(`Erreur seed: ${error.message}`); process.exit(1); });
-module.exports = { LOCATIONS, seed };
+module.exports = { LOCATIONS, recentMeasurements, seed };
