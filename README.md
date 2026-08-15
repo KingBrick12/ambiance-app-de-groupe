@@ -106,3 +106,51 @@ Il vérifie également la normalisation des lieux, l'ajout et le retrait des fav
 - `GET /api/account/contributions`, `GET /api/account/locations`
 - `GET/POST/DELETE /api/account/favorites[/:location]`
 - `GET /api/account/available-locations`
+
+## Phase 3 : installation, cache et production
+
+Prérequis : Node.js 20.19 ou plus récent, npm et MongoDB local ou Atlas. Exécutez `npm install` dans `ambiance-api`, puis dans `frontend`. Copiez chaque `.env.example` vers `.env` et remplacez les valeurs fictives. Les vrais `.env` restent ignorés par Git et doivent être transmis séparément pour la remise universitaire.
+
+Le backend utilise `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `FRONTEND_URL`, `PORT`, `SEED_API_KEY` et, facultativement, `CACHE_DEBUG`. `FRONTEND_URL` accepte plusieurs origines séparées par une virgule. Le frontend utilise `VITE_API_URL`, par exemple `http://localhost:3000` en local.
+
+Commandes de validation complètes :
+
+```powershell
+cd ambiance-api
+npm ci
+npm run check
+npm test
+
+cd ../frontend
+npm ci
+npm test
+npm run lint
+npm run build
+```
+
+La suite finale comprend 61 tests backend et 3 tests frontend. Le build frontend produit `frontend/dist`. Le backend n'a pas de compilation et démarre avec `npm start` sur le port fourni par `PORT`.
+
+`npm run test:integration` vérifie les parcours contre la base configurée. Le poste qui l'exécute doit être autorisé dans la liste d'accès réseau MongoDB Atlas; cette commande échoue avant toute opération si son adresse IP n'est pas autorisée.
+
+### Cache
+
+Le frontend conserve les lectures publiques dans une `Map` JavaScript. La liste des lieux et l'ambiance actuelle restent fraîches 30 secondes; le détail, l'historique et les créneaux calmes restent frais 300 secondes. Toutes les entrées sont conservées au maximum 600 secondes et les appels simultanés identiques sont dédupliqués.
+
+Le backend conserve les mêmes lectures publiques dans une `Map` du processus Node : TTL de 30 secondes pour `GET /locations` et l'ambiance actuelle, et de 300 secondes pour le détail, l'historique et les créneaux. `X-Cache: MISS` et `X-Cache: HIT` permettent de le vérifier. Une nouvelle mesure ou observation invalide la liste et toutes les entrées du lieu concerné sur les deux couches.
+
+Les écritures, l'authentification, les données du compte et la liste des appareils ne sont jamais mises en cache et utilisent `Cache-Control: no-store`. Le cache public utilise `Cache-Control: no-cache` pour empêcher une copie HTTP intermédiaire durable.
+
+### Déploiement Render
+
+Le fichier `render.yaml` décrit un Web Service Node pour l'API et un Static Site Vite. Aucun déploiement n'a été exécuté depuis cet environnement et aucune URL n'est inventée.
+
+- Backend : Root Directory `ambiance-api`, Build Command `npm ci --omit=dev`, Start Command `npm start`, Health Check Path `/health`; définir `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN=2h`, puis `FRONTEND_URL` avec l'URL HTTPS réelle du frontend.
+- Frontend : Root Directory `frontend`, Build Command `npm ci && npm run build`, Publish Directory `dist`; définir `VITE_API_URL` avec l'URL HTTPS réelle du backend et ajouter la rewrite `/*` vers `/index.html`.
+- Déployer d'abord le backend, reporter son URL dans `VITE_API_URL`, déployer le frontend, reporter ensuite son URL exacte dans `FRONTEND_URL`, puis redéployer l'API.
+- Pour le tout premier déploiement, utiliser temporairement `FRONTEND_URL=http://localhost:5173` sur le backend; remplacer cette valeur dès que Render fournit l'URL frontend réelle.
+- Vérifier `GET <BACKEND_RENDER_URL>/health`, les routes frontend en navigation directe, les appels API et l'absence d'erreur CORS.
+
+```text
+Frontend : <FRONTEND_RENDER_URL — à renseigner après déploiement>
+Backend  : <BACKEND_RENDER_URL — à renseigner après déploiement>
+```

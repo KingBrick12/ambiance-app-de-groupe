@@ -11,7 +11,7 @@ const INITIAL_STATE = {
 export function useLocations() {
   const [state, setState] = useState(INITIAL_STATE);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     setState((current) => ({
       ...current,
       loading: true,
@@ -19,7 +19,7 @@ export function useLocations() {
     }));
 
     try {
-      const { locations, meta } = await getLocations();
+      const { locations, meta } = await getLocations({ force });
 
       setState({
         loading: false,
@@ -52,6 +52,6 @@ export function useLocations() {
 
   return {
     ...state,
-    reload: load
+    reload: () => load(true)
   };
 }

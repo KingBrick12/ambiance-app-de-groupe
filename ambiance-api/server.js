@@ -19,13 +19,25 @@ const app = express();
 */
 app.use(
   cors({
-    origin: config.frontendUrl,
+    origin(origin, callback) {
+      if (!origin || config.frontendUrls.includes(origin.replace(/\/$/, ""))) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-api-key"]
   })
 );
 
 app.use(express.json({ limit: "100kb" }));
+
+app.use((req, res, next) => {
+  if (req.method !== "GET" || req.path.startsWith("/api/") || req.path.startsWith("/devices")) {
+    res.set("Cache-Control", "no-store");
+  }
+  next();
+});
 
 /*
  * Route principale
@@ -46,6 +58,11 @@ app.get("/", (req, res) => {
       userObservations: "/api/observations"
     }
   });
+});
+
+app.get("/health", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.status(200).json({ status: "ok" });
 });
 
 /*

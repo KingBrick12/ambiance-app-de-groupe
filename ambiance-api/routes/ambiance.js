@@ -9,10 +9,14 @@ const {
   buildQuietSlots,
   quietThresholdPayload
 } = require("../lib/ambianceService");
+const { CACHE_TTL, cacheResponse } = require("../middleware/responseCache");
 
 const router = express.Router();
 
-router.get("/:location/current", async (req, res) => {
+router.get("/:location/current", cacheResponse({
+  ttlMs: CACHE_TTL.CURRENT_MS,
+  tags: (req) => ["ambiance", `location:${req.params.location}`]
+}), async (req, res) => {
   try {
     const { location } = req.params;
     const { zone } = req.query;
@@ -52,7 +56,10 @@ router.get("/:location/current", async (req, res) => {
   }
 });
 
-router.get("/:location/history", async (req, res) => {
+router.get("/:location/history", cacheResponse({
+  ttlMs: CACHE_TTL.STABLE_READ_MS,
+  tags: (req) => ["ambiance", `location:${req.params.location}`]
+}), async (req, res) => {
   try {
     const { location } = req.params;
     const { zone, last } = req.query;
@@ -85,7 +92,10 @@ router.get("/:location/history", async (req, res) => {
   }
 });
 
-router.get("/:location/quiet-hours", async (req, res) => {
+router.get("/:location/quiet-hours", cacheResponse({
+  ttlMs: CACHE_TTL.STABLE_READ_MS,
+  tags: (req) => ["ambiance", `location:${req.params.location}`]
+}), async (req, res) => {
   try {
     const { location } = req.params;
     const { zone } = req.query;

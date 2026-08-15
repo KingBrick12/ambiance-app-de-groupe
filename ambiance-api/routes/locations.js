@@ -7,11 +7,12 @@ const {
   FRESHNESS_THRESHOLD_MINUTES,
   buildCurrentAmbiance
 } = require("../lib/ambianceService");
+const { CACHE_TTL, cacheResponse } = require("../middleware/responseCache");
 
 const router = express.Router();
 const FRESHNESS_THRESHOLD_MS = FRESHNESS_THRESHOLD_MINUTES * 60 * 1000;
 
-router.get("/", async (req, res) => {
+router.get("/", cacheResponse({ ttlMs: CACHE_TTL.LOCATIONS_MS, tags: ["locations", "ambiance"] }), async (req, res) => {
   try {
     const locations = await Location.find().sort({ name: 1 }).lean();
     const now = Date.now();
@@ -64,7 +65,10 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:slug", async (req, res) => {
+router.get("/:slug", cacheResponse({
+  ttlMs: CACHE_TTL.STABLE_READ_MS,
+  tags: (req) => ["locations", `location:${req.params.slug}`]
+}), async (req, res) => {
   try {
     const location = await Location.findOne({ slug: req.params.slug }).lean();
     if (!location) {

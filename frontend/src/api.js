@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+import { invalidatePublicQueries } from './api/queryCache'
+
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '')
 const TOKEN_KEY = 'ambiance_session'
 let onUnauthorized = null
 
@@ -10,9 +12,10 @@ export const session = {
 
 async function request(path, options = {}) {
   const token = session.get()
+  const headers = { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers }
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers },
+    headers,
   })
   const payload = await response.json().catch(() => ({}))
   if (response.status === 401 && token) onUnauthorized?.()
@@ -30,5 +33,9 @@ export const api = {
   locations: () => request('/api/account/available-locations'),
   addFavorite: (location) => request(`/api/account/favorites/${encodeURIComponent(location)}`, { method: 'POST' }),
   removeFavorite: (location) => request(`/api/account/favorites/${encodeURIComponent(location)}`, { method: 'DELETE' }),
-  addObservation: (body) => request('/api/observations', { method: 'POST', body: JSON.stringify(body) }),
+  addObservation: async (body) => {
+    const result = await request('/api/observations', { method: 'POST', body: JSON.stringify(body) })
+    invalidatePublicQueries(body.location)
+    return result
+  },
 }

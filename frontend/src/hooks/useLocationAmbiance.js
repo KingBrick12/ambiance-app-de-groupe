@@ -22,7 +22,7 @@ const INITIAL_STATE = {
 export function useLocationAmbiance(slug, period) {
   const [state, setState] = useState(INITIAL_STATE);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     setState((current) => ({
       ...current,
       loading: true,
@@ -36,10 +36,10 @@ export function useLocationAmbiance(slug, period) {
         history,
         quiet
       ] = await Promise.all([
-        getLocation(slug),
-        getCurrentAmbiance(slug),
-        getAmbianceHistory(slug, period),
-        getQuietHours(slug)
+        getLocation(slug, { force }),
+        getCurrentAmbiance(slug, { force }),
+        getAmbianceHistory(slug, period, { force }),
+        getQuietHours(slug, { force })
       ]);
 
       setState({
@@ -89,6 +89,6 @@ export function useLocationAmbiance(slug, period) {
 
   return {
     ...state,
-    reload: load
+    reload: () => load(true)
   };
 }

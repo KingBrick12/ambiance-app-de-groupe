@@ -3,6 +3,7 @@ const router = express.Router();
 
 const Observation = require("../models/Observation");
 const apiKeyAuth = require("../middleware/apiKeyAuth");
+const { invalidatePublicCache } = require("../middleware/responseCache");
 
 const OBSERVATION_FIELDS = [
   "sessionNo",
@@ -64,6 +65,8 @@ router.post("/", apiKeyAuth, async (req, res) => {
     }
 
     const observation = await Observation.create(payload);
+
+    invalidatePublicCache(observation.location);
 
     res.status(201).json({
       message: "Observation creee avec succes.",

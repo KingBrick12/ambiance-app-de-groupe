@@ -3,6 +3,7 @@ const router = express.Router();
 
 const Measurement = require("../models/Measurement");
 const apiKeyAuth = require("../middleware/apiKeyAuth");
+const { invalidatePublicCache } = require("../middleware/responseCache");
 
 // POST /measurements
 router.post("/", apiKeyAuth, async (req, res) => {
@@ -30,6 +31,8 @@ router.post("/", apiKeyAuth, async (req, res) => {
       zone,
       timestamp
     });
+
+    invalidatePublicCache(measurement.location);
 
     res.status(201).json({
       message: "Mesure creee avec succes.",

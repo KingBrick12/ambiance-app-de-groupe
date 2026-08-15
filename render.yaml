@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: ambiance-api
+    runtime: node
+    rootDir: ambiance-api
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 2h
+      - key: FRONTEND_URL
+        sync: false
+      - key: CACHE_DEBUG
+        value: "false"
+
+  - type: web
+    name: ambiance-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

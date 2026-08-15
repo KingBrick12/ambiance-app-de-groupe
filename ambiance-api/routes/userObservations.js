@@ -3,6 +3,7 @@ const Observation = require("../models/Observation");
 const userAuth = require("../middleware/userAuth");
 const { locationExists, normalizeLocation } = require("../lib/locations");
 const { validateObservationPayload } = require("../lib/observationService");
+const { invalidatePublicCache } = require("../middleware/responseCache");
 
 const router = express.Router();
 
@@ -31,6 +32,8 @@ router.post("/", userAuth, async (req, res) => {
       ...data,
       author: req.user._id || req.user.id
     });
+
+    invalidatePublicCache(observation.location);
 
     return res.status(201).json({
       message: "Observation ajoutée à vos contributions.",

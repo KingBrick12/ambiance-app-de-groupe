@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, Route, Routes, useSearchParams } from 'react-router-dom'
-import PublicMapPage from './pages/PublicMapPage'
-import LocationDetailsPage from './pages/LocationDetailsPage'
-import CompareLocationsPage from './pages/CompareLocationsPage'
 import { api } from './api'
 import { useAuth } from './auth-context'
 import './App.css'
+
+const PublicMapPage = lazy(() => import('./pages/PublicMapPage'))
+const LocationDetailsPage = lazy(() => import('./pages/LocationDetailsPage'))
+const CompareLocationsPage = lazy(() => import('./pages/CompareLocationsPage'))
 
 function MemberArea() {
   const auth = useAuth()
@@ -79,6 +80,7 @@ function App() {
     <div className="shell">
       <GlobalHeader />
 
+      <Suspense fallback={<main className="public-page"><p>Chargement de la page…</p></main>}>
       <Routes>
         <Route path="/" element={<PublicMapPage />} />
         <Route path="/comparer" element={<CompareLocationsPage />} />
@@ -86,6 +88,7 @@ function App() {
         <Route path="/espace" element={<MemberArea />} />
         <Route path="*" element={<main className="public-page"><h1>Page introuvable</h1><Link to="/">Retour à la carte</Link></main>} />
       </Routes>
+      </Suspense>
     </div>
   )
 }

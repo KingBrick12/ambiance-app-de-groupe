@@ -161,8 +161,7 @@ export default function LocationDetailsPage() {
           </label>
         </div>
 
-        <<HistoryChart points={history?.points} scale={history?.scale} />
-        />
+        <HistoryChart points={history?.points} scale={history?.scale} />
       </section>
 
       <section className="quiet-section">
