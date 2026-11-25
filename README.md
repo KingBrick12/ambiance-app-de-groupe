@@ -1,4 +1,4 @@
-# Ambiance Montréal — IFT3225, groupe 18
+# Ambiance Montréal groupe 18
 
 Application Express/MongoDB et React/Vite pour consulter l'ambiance de trois parcs, importer les collectes Phyphox et contribuer avec un compte utilisateur.
 
